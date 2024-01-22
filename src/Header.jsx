@@ -1,10 +1,10 @@
-import "./header.css";
-const Header = () => {
+function Header() {
   return (
-    <div className="header">
-      <h1>THE REACT QUIZ</h1>
-    </div>
+    <header className="app-header">
+      <img src="logo512.png" alt="React logo" />
+      <h1>The React Quiz</h1>
+    </header>
   );
-};
+}
 
 export default Header;

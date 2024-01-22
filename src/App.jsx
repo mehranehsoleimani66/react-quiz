@@ -1,23 +1,65 @@
-import Content from "./Content";
+import { useEffect, useReducer } from "react";
+
 import Header from "./Header";
-import "./App.css";
-import { useEffect } from "react";
-const App = () => {
-  useEffect(() => {
+import Main1 from "./Main1";
+import Loader from "./Loader";
+import Error from "./Error";
+import StartScreen from "./StartScreen";
+import "./app.css";
+import Question from "./Question";
+const initialState = {
+  questions: [],
+
+  // 'loading', 'error', 'ready', 'active', 'finished'
+  status: "loading"
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case "dataReceived":
+      return {
+        ...state,
+        questions: action.payload,
+        status: "ready"
+      };
+    case "dataFailed":
+      return {
+        ...state,
+        status: "error"
+      };
+    case "start":
+      return {
+        ...state,
+        status: "active"
+      };
+
+    default:
+      throw new Error("Action unkonwn");
+  }
+}
+
+export default function App() {
+  const [{ questions, status }, dispatch] = useReducer(reducer, initialState);
+  const numQuestions = questions.length;
+  useEffect(function () {
     fetch("http://localhost:9000/questions")
       .then((res) => res.json())
-      .then((data) => console.log(data))
-      .catch((err) => console.log(err, "error"));
+      .then((data) => dispatch({ type: "dataReceived", payload: data }))
+      .catch((err) => dispatch({ type: "dataFailed" }));
   }, []);
+
   return (
     <div className="app">
       <Header />
-      <Content>
-        <p>1/20</p>
-        <p>questions</p>
-      </Content>
+
+      <Main1>
+        {status === "loading" && <Loader />}
+        {status === "error" && <Error />}
+        {status === "ready" && (
+          <StartScreen numQuestions={numQuestions} dispatch={dispatch} />
+        )}
+        {status === "active" && <Question />}
+      </Main1>
     </div>
   );
-};
-
-export default App;
+}

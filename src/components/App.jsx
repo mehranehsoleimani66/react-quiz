@@ -8,6 +8,8 @@ import StartScreen from "./StartScreen";
 import "./app.css";
 import Question from "./Question";
 import NextQuestion from "./NextQuestion";
+import Progress from "./Progress";
+import FinishedScreen from "./FinishedScreen";
 const initialState = {
   questions: [],
   status: "loading",
@@ -51,6 +53,11 @@ function reducer(state, action) {
         index: state.index + 1,
         answer: null
       };
+    case "finish":
+      return {
+        ...state,
+        status: "finished"
+      };
 
     default:
       throw new Error("Action unkonwn");
@@ -58,11 +65,16 @@ function reducer(state, action) {
 }
 
 export default function App() {
-  const [{ questions, status, index, answer }, dispatch] = useReducer(
+  const [{ questions, status, index, answer, points }, dispatch] = useReducer(
     reducer,
     initialState
   );
   const numQuestions = questions.length;
+
+  const maxPossiblePoints = questions.reduce(
+    (prev, cur) => prev + cur.points,
+    0
+  );
   useEffect(function () {
     fetch("http://localhost:9000/questions")
       .then((res) => res.json())
@@ -82,13 +94,31 @@ export default function App() {
         )}
         {status === "active" && (
           <>
+            <Progress
+              points={points}
+              index={index}
+              maxPossiblePoints={maxPossiblePoints}
+              numQuestions={numQuestions}
+              answer={answer}
+            />
             <Question
               question={questions[index]}
               answer={answer}
               dispatch={dispatch}
             />
-            <NextQuestion dispatch={dispatch} answer={answer} />
+            <NextQuestion
+              dispatch={dispatch}
+              answer={answer}
+              index={index}
+              numQuestions={numQuestions}
+            />
           </>
+        )}
+        {status === "finished" && (
+          <FinishedScreen
+            points={points}
+            maxImpossiblePoints={maxPossiblePoints}
+          />
         )}
       </Main1>
     </div>

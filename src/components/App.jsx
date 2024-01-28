@@ -7,15 +7,16 @@ import Error from "./Error";
 import StartScreen from "./StartScreen";
 import "./app.css";
 import Question from "./Question";
-import NextQuestion from "./NextQuestion";
+import NextButton from "./NextButton";
 import Progress from "./Progress";
-import FinishedScreen from "./FinishedScreen";
+import FinishScreen from "./FinishScreen";
 const initialState = {
   questions: [],
   status: "loading",
   index: 0,
   points: 0,
-  answer: null
+  answer: null,
+  highScore: 0
 };
 
 function reducer(state, action) {
@@ -56,7 +57,15 @@ function reducer(state, action) {
     case "finish":
       return {
         ...state,
-        status: "finished"
+        status: "finished",
+        highScore:
+          state.points > state.highScore ? state.points : state.highScore
+      };
+    case "restart":
+      return {
+        ...initialState,
+        questions: state.questions,
+        status: "ready"
       };
 
     default:
@@ -65,10 +74,8 @@ function reducer(state, action) {
 }
 
 export default function App() {
-  const [{ questions, status, index, answer, points }, dispatch] = useReducer(
-    reducer,
-    initialState
-  );
+  const [{ questions, status, index, answer, points, highScore }, dispatch] =
+    useReducer(reducer, initialState);
   const numQuestions = questions.length;
 
   const maxPossiblePoints = questions.reduce(
@@ -106,7 +113,7 @@ export default function App() {
               answer={answer}
               dispatch={dispatch}
             />
-            <NextQuestion
+            <NextButton
               dispatch={dispatch}
               answer={answer}
               index={index}
@@ -115,9 +122,11 @@ export default function App() {
           </>
         )}
         {status === "finished" && (
-          <FinishedScreen
+          <FinishScreen
             points={points}
-            maxImpossiblePoints={maxPossiblePoints}
+            maxPossiblePoints={maxPossiblePoints}
+            highScore={highScore}
+            dispatch={dispatch}
           />
         )}
       </Main1>

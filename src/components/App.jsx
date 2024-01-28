@@ -10,15 +10,18 @@ import Question from "./Question";
 import NextButton from "./NextButton";
 import Progress from "./Progress";
 import FinishScreen from "./FinishScreen";
+import Timer from "./Timer";
+import Footer from "./Footer";
 const initialState = {
   questions: [],
   status: "loading",
   index: 0,
   points: 0,
   answer: null,
-  highScore: 0
+  highScore: 0,
+  secondReminding: null
 };
-
+const SECS_PER_QUESTION = 30;
 function reducer(state, action) {
   switch (action.type) {
     case "dataReceived":
@@ -35,7 +38,8 @@ function reducer(state, action) {
     case "start":
       return {
         ...state,
-        status: "active"
+        status: "active",
+        secondReminding: state.questions.length * SECS_PER_QUESTION
       };
     case "newAnswer":
       const question = state.questions.at(state.index);
@@ -67,6 +71,15 @@ function reducer(state, action) {
         questions: state.questions,
         status: "ready"
       };
+    case "tick":
+      return {
+        ...state,
+        secondReminding: state.secondReminding - 1,
+        status:
+          state.secondReminding === 0
+            ? (state.status = "finished")
+            : state.status
+      };
 
     default:
       throw new Error("Action unkonwn");
@@ -74,8 +87,10 @@ function reducer(state, action) {
 }
 
 export default function App() {
-  const [{ questions, status, index, answer, points, highScore }, dispatch] =
-    useReducer(reducer, initialState);
+  const [
+    { questions, status, index, answer, points, highScore, secondReminding },
+    dispatch
+  ] = useReducer(reducer, initialState);
   const numQuestions = questions.length;
 
   const maxPossiblePoints = questions.reduce(
@@ -113,12 +128,15 @@ export default function App() {
               answer={answer}
               dispatch={dispatch}
             />
-            <NextButton
-              dispatch={dispatch}
-              answer={answer}
-              index={index}
-              numQuestions={numQuestions}
-            />
+            <Footer>
+              <Timer secondReminding={secondReminding} dispatch={dispatch} />
+              <NextButton
+                dispatch={dispatch}
+                answer={answer}
+                index={index}
+                numQuestions={numQuestions}
+              />
+            </Footer>
           </>
         )}
         {status === "finished" && (
